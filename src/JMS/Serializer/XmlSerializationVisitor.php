@@ -444,9 +444,8 @@ class XmlSerializationVisitor extends AbstractVisitor
             if ($this->currentNode->isDefaultNamespace($namespace)) {
                 return $this->document->createElementNS($namespace, $tagName);
             } else {
-                if (!$prefix = $this->currentNode->lookupPrefix($namespace)) {
-                    $prefix = 'ns-'.  substr(sha1($namespace), 0, 8);
-                }
+                $prefix = $this->lookupNamespacePrefix($this->currentNode, $namespace);
+
                 return $this->document->createElementNS($namespace, $prefix . ':' . $tagName);
             }
 
@@ -459,9 +458,8 @@ class XmlSerializationVisitor extends AbstractVisitor
     private function setAttributeOnNode(\DOMElement $node, $name, $value, $namespace = null)
     {
         if (null !== $namespace) {
-            if (!$prefix = $node->lookupPrefix($namespace)) {
-                $prefix = 'ns-'.  substr(sha1($namespace), 0, 8);
-            }
+            $prefix = $this->lookupNamespacePrefix($this->currentNode, $namespace);
+
             $node->setAttributeNS($namespace, $prefix.':'.$name, $value);
         } else {
             $node->setAttribute($name, $value);
@@ -473,4 +471,22 @@ class XmlSerializationVisitor extends AbstractVisitor
         return (isset($metadata->xmlNamespaces[''])?$metadata->xmlNamespaces['']:null);
     }
 
+    /**
+     * @param \DOMElement $node
+     * @param string $namespace
+     *
+     * @return string
+     */
+    private function lookupNamespacePrefix(\DOMElement $node, $namespace)
+    {
+        // search for the namespace prefix at the doc level first, then node level
+        $prefix = $this->document->lookupPrefix($namespace) ?: $node->lookupPrefix($namespace);
+
+        // fallback to hashed prefix
+        if (!$prefix) {
+            $prefix = 'ns-' . substr(sha1($namespace), 0, 8);
+        }
+
+        return $prefix;
+    }
 }

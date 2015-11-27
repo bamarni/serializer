@@ -258,14 +258,13 @@ class XmlDeserializationVisitor extends AbstractVisitor
             return;
         }
 
-        if ($metadata->xmlNamespace) {
+        if (null !== $metadata->xmlNamespace) {
             $node = $data->children($metadata->xmlNamespace)->$name;
             if (!$node->count()) {
                 return;
             }
         } else {
             $namespaces = $data->getDocNamespaces();
-
             if (isset($namespaces[''])) {
                 $prefix = uniqid('ns-');
                 $data->registerXPathNamespace($prefix, $namespaces['']);
@@ -278,6 +277,7 @@ class XmlDeserializationVisitor extends AbstractVisitor
                 if (!isset($data->$name)) {
                     return;
                 }
+
                 $node = $data->$name;
             }
         }
